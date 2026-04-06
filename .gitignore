@@ -1,0 +1,8 @@
+.env
+venv/
+__pycache__/
+*.pyc
+*.pyo
+.streamlit/secrets.toml
+reset_pg_password.py
+Untitled-1.py
