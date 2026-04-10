@@ -14,9 +14,46 @@ from etl.config import map_strategic_area, ALL_STRATEGIC_AREAS
 log = logging.getLogger(__name__)
 
 
+def _create_dim_tables(engine) -> None:
+    """Create dimension tables if they don't exist (idempotent)."""
+    with engine.begin() as conn:
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS dwh.dim_implementing_entity (
+                id          SERIAL PRIMARY KEY,
+                entity_name VARCHAR(255) UNIQUE NOT NULL
+            )
+        """))
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS dwh.dim_results_area (
+                id        SERIAL PRIMARY KEY,
+                area_name VARCHAR(255) UNIQUE NOT NULL
+            )
+        """))
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS dwh.dim_category (
+                id            SERIAL PRIMARY KEY,
+                category_name VARCHAR(255) UNIQUE NOT NULL
+            )
+        """))
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS dwh.dim_delivery_partner (
+                id           SERIAL PRIMARY KEY,
+                partner_name VARCHAR(255) UNIQUE NOT NULL
+            )
+        """))
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS dwh.dim_strategic_area (
+                id        SERIAL PRIMARY KEY,
+                area_name VARCHAR(255) UNIQUE NOT NULL
+            )
+        """))
+
+
 def run_dimensions() -> None:
     log.info("Dimensions: start")
     engine = get_engine()
+
+    _create_dim_tables(engine)
 
     with engine.connect() as conn:
         acts = pd.read_sql("SELECT * FROM stg.stg_activities", conn)
@@ -127,7 +164,6 @@ def _upsert_dim_indicator(engine, inds: pd.DataFrame) -> None:
     })
 
     with engine.begin() as conn:
-        conn.execute(text("TRUNCATE dwh.dim_indicator"))
         rows.to_sql("dim_indicator", conn, schema="dwh",
-                    if_exists="append", index=False)
+                    if_exists="replace", index=False)
     log.info(f"  dim_indicator: {len(rows)} indicators")

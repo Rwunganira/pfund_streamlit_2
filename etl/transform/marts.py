@@ -135,7 +135,6 @@ def _build_mart_indicator_kpis(engine, facts: pd.DataFrame) -> None:
         })
     kpi_df = pd.DataFrame(rows)
     with engine.begin() as conn:
-        conn.execute(text("TRUNCATE mart.mart_indicator_kpis"))
         kpi_df.to_sql("mart_indicator_kpis", conn, schema="mart",
                       if_exists="replace", index=False)
     log.info(f"  mart_indicator_kpis: {len(kpi_df)} rows")
@@ -162,9 +161,8 @@ def _build_mart_entity_performance(engine, facts: pd.DataFrame) -> None:
             })
     ep_df = pd.DataFrame(rows)
     with engine.begin() as conn:
-        conn.execute(text("TRUNCATE mart.mart_entity_performance"))
         ep_df.to_sql("mart_entity_performance", conn, schema="mart",
-                     if_exists="append", index=False)
+                     if_exists="replace", index=False)
     log.info(f"  mart_entity_performance: {len(ep_df)} rows")
 
 
@@ -189,9 +187,8 @@ def _build_mart_strategic_summary(engine, facts: pd.DataFrame) -> None:
             })
     ss_df = pd.DataFrame(rows)
     with engine.begin() as conn:
-        conn.execute(text("TRUNCATE mart.mart_strategic_summary"))
         ss_df.to_sql("mart_strategic_summary", conn, schema="mart",
-                     if_exists="append", index=False)
+                     if_exists="replace", index=False)
     log.info(f"  mart_strategic_summary: {len(ss_df)} rows")
 
 
@@ -272,7 +269,6 @@ def _build_mart_indicator_tracker(engine, facts: pd.DataFrame) -> None:
     tracker_df = df[flat_cols].rename(columns={"eff_progress": "progress_pct"})
 
     with engine.begin() as conn:
-        conn.execute(text("TRUNCATE mart.mart_indicator_tracker"))
         tracker_df.to_sql("mart_indicator_tracker", conn, schema="mart",
                           if_exists="replace", index=False)
     log.info(f"  mart_indicator_tracker: {len(tracker_df)} rows")
@@ -283,9 +279,8 @@ def _build_mart_indicator_tracker(engine, facts: pd.DataFrame) -> None:
 def _build_mart_budget_performance(engine, facts: pd.DataFrame) -> None:
     df = facts.drop(columns=["id"], errors="ignore")
     with engine.begin() as conn:
-        conn.execute(text("TRUNCATE mart.mart_budget_performance"))
         df.to_sql("mart_budget_performance", conn, schema="mart",
-                  if_exists="append", index=False)
+                  if_exists="replace", index=False)
     log.info(f"  mart_budget_performance: {len(facts)} rows")
 
 
@@ -305,7 +300,6 @@ def _build_mart_activity_status(engine, facts: pd.DataFrame) -> None:
 
     status_df = pd.concat(rows, ignore_index=True)
     with engine.begin() as conn:
-        conn.execute(text("TRUNCATE mart.mart_activity_status"))
         status_df.to_sql("mart_activity_status", conn, schema="mart",
-                         if_exists="append", index=False)
+                         if_exists="replace", index=False)
     log.info(f"  mart_activity_status: {len(status_df)} rows")

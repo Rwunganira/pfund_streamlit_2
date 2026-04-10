@@ -56,11 +56,9 @@ def _extract_activities(src, wh) -> None:
             conn,
         )
 
-    # Truncate and reload staging
     with wh.begin() as conn:
-        conn.execute(text("TRUNCATE stg.stg_activities"))
         df.to_sql("stg_activities", conn, schema="stg",
-                  if_exists="append", index=False)
+                  if_exists="replace", index=False)
 
     log.info(f"  → {len(df)} activities staged")
 
@@ -111,8 +109,7 @@ def _extract_indicators(src, wh) -> None:
         )
 
     with wh.begin() as conn:
-        conn.execute(text("TRUNCATE stg.stg_indicators"))
         df.to_sql("stg_indicators", conn, schema="stg",
-                  if_exists="append", index=False)
+                  if_exists="replace", index=False)
 
     log.info(f"  → {len(df)} indicators staged")

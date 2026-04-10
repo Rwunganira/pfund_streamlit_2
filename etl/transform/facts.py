@@ -149,9 +149,8 @@ def _build_fact_indicator_progress(engine, df: pd.DataFrame) -> None:
     ]]
 
     with engine.begin() as conn:
-        conn.execute(text("TRUNCATE dwh.fact_indicator_progress"))
         fact_df.to_sql("fact_indicator_progress", conn, schema="dwh",
-                       if_exists="append", index=False)
+                       if_exists="replace", index=False)
 
     log.info(f"  → {len(fact_df)} fact_indicator_progress rows")
 
@@ -191,8 +190,7 @@ def _build_fact_budget_execution(engine, df: pd.DataFrame) -> None:
     fact_df = pd.concat(year_rows, ignore_index=True)
 
     with engine.begin() as conn:
-        conn.execute(text("TRUNCATE dwh.fact_budget_execution"))
         fact_df.to_sql("fact_budget_execution", conn, schema="dwh",
-                       if_exists="append", index=False)
+                       if_exists="replace", index=False)
 
     log.info(f"  → {len(fact_df)} fact_budget_execution rows")

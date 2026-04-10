@@ -27,7 +27,12 @@ def _make_engine(url: str, label: str) -> Engine:
         )
     # Heroku uses postgres:// — SQLAlchemy 1.4+ requires postgresql://
     url = url.replace("postgres://", "postgresql://", 1)
-    return create_engine(url, pool_pre_ping=True)
+    # Heroku Postgres (RDS-backed) requires SSL; local postgres does not
+    is_remote = "amazonaws.com" in url or "heroku" in url
+    kwargs = {"pool_pre_ping": True}
+    if is_remote:
+        kwargs["connect_args"] = {"sslmode": "require"}
+    return create_engine(url, **kwargs)
 
 
 def get_source_engine() -> Engine:

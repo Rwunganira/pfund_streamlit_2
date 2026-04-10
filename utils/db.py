@@ -28,7 +28,9 @@ def _get_engine():
         if raw_url.startswith("postgres://")
         else raw_url
     )
-    return create_engine(db_url, pool_pre_ping=True)
+    is_remote = "amazonaws.com" in db_url or "heroku" in db_url
+    connect_args = {"sslmode": "require"} if is_remote else {}
+    return create_engine(db_url, pool_pre_ping=True, connect_args=connect_args)
 
 
 # ── Schema bootstrap ───────────────────────────────────────────────────────────
