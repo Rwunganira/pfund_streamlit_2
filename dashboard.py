@@ -29,6 +29,7 @@ from utils.db import ensure_users_table
 from views.auth import render_login_page, render_register_page, render_forgot_password_page
 from views.activities import render_activities_dashboard
 from views.indicators import render_indicator_dashboard
+from views.management_tracker import render_management_tracker
 
 
 def main() -> None:
@@ -65,15 +66,17 @@ def main() -> None:
         st.divider()
         dashboard = st.radio(
             "Select Dashboard",
-            ["📊 Portfolio Activities", "🦠 Indicator Tracker"],
+            ["📊 Portfolio Activities", "🦠 Indicator Tracker", "📋 Management Tracker"],
             key="dashboard_selector",
         )
         st.divider()
 
     if dashboard == "📊 Portfolio Activities":
         render_activities_dashboard()
-    else:
+    elif dashboard == "🦠 Indicator Tracker":
         render_indicator_dashboard()
+    else:
+        render_management_tracker()
 
 
 if __name__ == "__main__":
