@@ -53,8 +53,8 @@ def _load_tracker() -> pd.DataFrame:
 # ── Save helper ────────────────────────────────────────────────────────────────
 
 _EDITABLE_COLS = [
-    "category", "implementing_entity", "status",
-    "priority", "timeline_parsed", "notes",
+    "category", "implementing_entity", "responsible",
+    "status", "priority", "timeline_parsed", "notes",
 ]
 
 
@@ -85,6 +85,7 @@ def _save_changes(original: pd.DataFrame, edited: pd.DataFrame) -> int:
                 UPDATE management_action_tracker
                 SET category            = :cat,
                     implementing_entity = :entity,
+                    responsible         = :responsible,
                     status              = :status,
                     priority            = :priority,
                     timeline_parsed     = :tl,
@@ -92,13 +93,14 @@ def _save_changes(original: pd.DataFrame, edited: pd.DataFrame) -> int:
                     updated_at          = NOW()
                 WHERE id = :id
             """), {
-                "cat":    row["category"],
-                "entity": row["implementing_entity"],
-                "status": row["status"],
-                "priority": row["priority"],
-                "tl":     tl,
-                "notes":  None if pd.isna(row["notes"]) else row["notes"],
-                "id":     int(row["id"]),
+                "cat":         row["category"],
+                "entity":      row["implementing_entity"],
+                "responsible": None if pd.isna(row["responsible"]) else row["responsible"],
+                "status":      row["status"],
+                "priority":    row["priority"],
+                "tl":          tl,
+                "notes":       None if pd.isna(row["notes"]) else row["notes"],
+                "id":          int(row["id"]),
             })
 
     _load_tracker.clear()
@@ -250,7 +252,7 @@ def _column_config() -> dict:
             "Parsed Date", format="YYYY-MM-DD", width="small"
         ),
         "responsible": st.column_config.TextColumn(
-            "Responsible", disabled=True, width="medium"
+            "Responsible", width="medium"
         ),
         "notes": st.column_config.TextColumn(
             "Notes", width="medium"
