@@ -32,6 +32,7 @@ from utils.db import ensure_users_table
 from views.auth import bootstrap_auth
 from views.activities import render_activities_dashboard
 from views.indicators import render_indicator_dashboard
+from views.management_tracker import render_management_tracker
 from views.admin import render_admin_panel
 
 
@@ -50,7 +51,7 @@ def main() -> None:
     role         = st.session_state.get("role", "analyst")
 
     # Build nav options based on role
-    options = ["📊 Portfolio Activities", "🦠 Indicator Tracker"]
+    options = ["📊 Portfolio Activities", "🦠 Indicator Tracker", "📋 Management Tracker"]
     if role == "admin":
         options.append("⚙️ Admin Panel")
 
@@ -74,6 +75,8 @@ def main() -> None:
         render_activities_dashboard()
     elif dashboard == "🦠 Indicator Tracker":
         render_indicator_dashboard()
+    elif dashboard == "📋 Management Tracker":
+        render_management_tracker()
     elif dashboard == "⚙️ Admin Panel":
         render_admin_panel()
 
