@@ -1,0 +1,39 @@
+{% extends "auth/base.html" %}
+{% block title %}Create Account{% endblock %}
+{% block content %}
+<h5 class="mb-3">Create Account</h5>
+
+{% for e in errors %}
+  <div class="alert alert-danger py-2">{{ e }}</div>
+{% endfor %}
+
+<form method="post">
+  <div class="mb-3">
+    <label class="form-label">Full Name</label>
+    <input name="name" type="text" class="form-control" required autofocus>
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Username</label>
+    <input name="username" type="text" class="form-control" required>
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Email</label>
+    <input name="email" type="email" class="form-control" required>
+    <div class="form-text">A confirmation link will be sent here.</div>
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Password</label>
+    <input name="password" type="password" class="form-control"
+           minlength="8" required>
+    <div class="form-text">Minimum 8 characters.</div>
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Confirm Password</label>
+    <input name="confirm_password" type="password" class="form-control" required>
+  </div>
+  <button type="submit" class="btn btn-primary w-100">Register</button>
+</form>
+
+<div class="divider"></div>
+<a href="{{ url_for('auth.login') }}" class="small">← Back to login</a>
+{% endblock %}

@@ -1,0 +1,27 @@
+{% extends "auth/base.html" %}
+{% block title %}Verify Email{% endblock %}
+{% block content %}
+<h5 class="mb-3">Verify your email</h5>
+
+{% if success %}
+  <div class="alert alert-success">
+    ✅ Email verified! You can now sign in.
+  </div>
+  <a href="{{ login_url }}" class="btn btn-primary w-100">Go to login</a>
+
+{% elif expired %}
+  <div class="alert alert-danger">
+    ⚠️ This link has expired or is invalid. Please register again or request a new link.
+  </div>
+  <a href="{{ login_url }}" class="btn btn-outline-secondary w-100">Back to login</a>
+
+{% elif sent %}
+  <div class="alert alert-info">
+    📧 A confirmation link has been sent to <strong>{{ email }}</strong>.
+    Click the link in the email to activate your account.
+  </div>
+  <p class="text-muted small">Didn't receive it? Check your spam folder, or
+    <a href="{{ url_for('auth.login') }}">go back to login</a> to request another.
+  </p>
+{% endif %}
+{% endblock %}
