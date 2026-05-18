@@ -140,6 +140,74 @@ def render_activities_dashboard() -> None:
         if fdf.empty:
             st.warning("No data for current filters.")
         else:
+            # ── Grant Funding Summary Table ───────────────────────────────────
+            ADMIN_ACTIVITY = "Project management and administration fees from IE(s)"
+            st.markdown("#### Grant Funding Summary by Implementing Entity")
+
+            fund_src = bud_df.copy()
+            if sel_entity:
+                fund_src = fund_src[fund_src["entity_name"].isin(sel_entity)]
+
+            is_admin = fund_src["proposed_activity"] == ADMIN_ACTIVITY \
+                if "proposed_activity" in fund_src.columns \
+                else pd.Series(False, index=fund_src.index)
+
+            fund_grp = (
+                fund_src.groupby("entity_name", dropna=False)
+                .apply(lambda g: pd.Series({
+                    "Total Activity Cost (US$)": g.loc[~is_admin.loc[g.index], "budget_allocated"].sum(),
+                    "Administrative Fees (US$)": g.loc[is_admin.loc[g.index],  "budget_allocated"].sum(),
+                }), include_groups=False)
+                .reset_index()
+                .rename(columns={"entity_name": "Implementing Entity"})
+            )
+            fund_grp["Grant Award (US$)"] = (
+                fund_grp["Total Activity Cost (US$)"] + fund_grp["Administrative Fees (US$)"]
+            )
+
+            totals = pd.DataFrame([{
+                "Implementing Entity": "Project Totals",
+                "Total Activity Cost (US$)": fund_grp["Total Activity Cost (US$)"].sum(),
+                "Administrative Fees (US$)":  fund_grp["Administrative Fees (US$)"].sum(),
+                "Grant Award (US$)":           fund_grp["Grant Award (US$)"].sum(),
+            }])
+            fund_display = pd.concat([fund_grp, totals], ignore_index=True)
+
+            def _style_fund(df):
+                styles = pd.DataFrame("", index=df.index, columns=df.columns)
+                styles["Total Activity Cost (US$)"] = "background-color: #FFD700; font-weight: bold;"
+                styles.iloc[-1] = styles.iloc[-1].apply(
+                    lambda x: x + " font-weight: bold; border-top: 2px solid #333;"
+                )
+                return styles
+
+            money_fmt = {c: "{:,.2f}" for c in [
+                "Total Activity Cost (US$)", "Administrative Fees (US$)", "Grant Award (US$)"
+            ]}
+            styled_fund = (
+                fund_display.style
+                .apply(_style_fund, axis=None)
+                .format(money_fmt)
+                .set_properties(**{"text-align": "right"},  subset=list(money_fmt))
+                .set_properties(**{"text-align": "center"}, subset=["Implementing Entity"])
+                .set_table_styles([
+                    {"selector": "th", "props": [
+                        ("background-color", "#1f4e79"), ("color", "white"),
+                        ("font-weight", "bold"), ("text-align", "center"),
+                        ("border", "1px solid #ccc")]},
+                    {"selector": "td", "props": [
+                        ("border", "1px solid #ccc"), ("padding", "6px 12px")]},
+                    {"selector": "table", "props": [
+                        ("border-collapse", "collapse"), ("width", "100%")]},
+                ])
+            )
+            st.dataframe(styled_fund, use_container_width=True, hide_index=True)
+            st.caption(
+                f'Administrative Fees = budget of activity "{ADMIN_ACTIVITY}". '
+                "Totals cover all years regardless of year filter above."
+            )
+            st.divider()
+            # ─────────────────────────────────────────────────────────────────
             for group_col, label in [("entity_name", "Implementing Entity"),
                                       ("results_area", "Results Area")]:
                 st.markdown(f"#### By {label}")
