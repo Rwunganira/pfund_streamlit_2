@@ -41,7 +41,7 @@ st.set_page_config(
 )
 
 from utils.db import ensure_users_table
-from views.auth import bootstrap_auth
+from views.auth import bootstrap_auth, logout
 from views.activities import render_activities_dashboard
 from views.indicators import render_indicator_dashboard
 from views.management_tracker import render_management_tracker
@@ -71,8 +71,7 @@ def main() -> None:
         st.markdown(f"👤 **{display_name}**")
         st.caption(f"Role: {role}")
         if st.button("Logout", key="logout_btn"):
-            st.session_state.clear()
-            st.rerun()
+            logout()
         st.divider()
         st.markdown("## 📊 Pandemic Fund M&E")
         st.divider()
