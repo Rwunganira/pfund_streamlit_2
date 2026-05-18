@@ -128,7 +128,7 @@ def render_activities_dashboard() -> None:
 
             # ── Grant Funding Summary ─────────────────────────────────────────
             st.markdown("#### Grant Funding Summary by Implementing Entity")
-            ADMIN_ACTIVITY = "Project management and administration fees from IE(s)"
+            ADMIN_ACTIVITY = "project management and administration fees from ie(s)"
             # One row per activity; budget_total is activity-level, not year-level
             fund_src = (
                 bud_df
@@ -154,7 +154,11 @@ def render_activities_dashboard() -> None:
                     "Run `python -m etl.run_etl` to get correct totals.",
                 )
             is_admin = (
-                fund_src["proposed_activity"] == ADMIN_ACTIVITY
+                fund_src["proposed_activity"]
+                .fillna("")
+                .str.strip()
+                .str.lower()
+                == ADMIN_ACTIVITY
                 if "proposed_activity" in fund_src.columns
                 else pd.Series(False, index=fund_src.index)
             )
@@ -206,7 +210,7 @@ def render_activities_dashboard() -> None:
             )
             st.dataframe(styled_fund, use_container_width=True, hide_index=True)
             st.caption(
-                f'Administrative Fees = budget of activity "{ADMIN_ACTIVITY}". '
+                f'Administrative Fees = budget of activity "Project management and administration fees from IE(s)". '
                 "Totals cover all years regardless of year filter above."
             )
 
