@@ -125,33 +125,16 @@ def render_activities_dashboard() -> None:
                 st.plotly_chart(fig2, use_container_width=True)
 
             st.divider()
-            n_years = len(active_years)
-            st.markdown(
-                f"#### Filtered Activities"
-                + (f" *(showing {n_years} year{'s' if n_years > 1 else ''} × {n_acts} activities = {len(fdf)} rows)*"
-                   if n_years > 1 else f" *({n_acts} activities)*")
-            )
-            st.dataframe(fdf, use_container_width=True, height=400)
-            show_download_button(fdf, "activities_overview.csv")
 
-    # ── Tab 2: Budget & Performance ───────────────────────────────────────────
-    with tab2:
-        st.subheader(f"Budget & Performance — {year_label}")
-        if fdf.empty:
-            st.warning("No data for current filters.")
-        else:
-            # ── Grant Funding Summary Table ───────────────────────────────────
-            ADMIN_ACTIVITY = "Project management and administration fees from IE(s)"
+            # ── Grant Funding Summary ─────────────────────────────────────────
             st.markdown("#### Grant Funding Summary by Implementing Entity")
-
+            ADMIN_ACTIVITY = "Project management and administration fees from IE(s)"
             fund_src = bud_df.copy()
             if sel_entity:
                 fund_src = fund_src[fund_src["entity_name"].isin(sel_entity)]
-
             is_admin = fund_src["proposed_activity"] == ADMIN_ACTIVITY \
                 if "proposed_activity" in fund_src.columns \
                 else pd.Series(False, index=fund_src.index)
-
             fund_grp = (
                 fund_src.groupby("entity_name", dropna=False)
                 .apply(lambda g: pd.Series({
@@ -164,15 +147,13 @@ def render_activities_dashboard() -> None:
             fund_grp["Grant Award (US$)"] = (
                 fund_grp["Total Activity Cost (US$)"] + fund_grp["Administrative Fees (US$)"]
             )
-
             totals = pd.DataFrame([{
-                "Implementing Entity": "Project Totals",
+                "Implementing Entity":       "Project Totals",
                 "Total Activity Cost (US$)": fund_grp["Total Activity Cost (US$)"].sum(),
-                "Administrative Fees (US$)":  fund_grp["Administrative Fees (US$)"].sum(),
-                "Grant Award (US$)":           fund_grp["Grant Award (US$)"].sum(),
+                "Administrative Fees (US$)": fund_grp["Administrative Fees (US$)"].sum(),
+                "Grant Award (US$)":         fund_grp["Grant Award (US$)"].sum(),
             }])
             fund_display = pd.concat([fund_grp, totals], ignore_index=True)
-
             def _style_fund(df):
                 styles = pd.DataFrame("", index=df.index, columns=df.columns)
                 styles["Total Activity Cost (US$)"] = "background-color: #FFD700; font-weight: bold;"
@@ -180,7 +161,6 @@ def render_activities_dashboard() -> None:
                     lambda x: x + " font-weight: bold; border-top: 2px solid #333;"
                 )
                 return styles
-
             money_fmt = {c: "{:,.2f}" for c in [
                 "Total Activity Cost (US$)", "Administrative Fees (US$)", "Grant Award (US$)"
             ]}
@@ -206,8 +186,23 @@ def render_activities_dashboard() -> None:
                 f'Administrative Fees = budget of activity "{ADMIN_ACTIVITY}". '
                 "Totals cover all years regardless of year filter above."
             )
+
             st.divider()
-            # ─────────────────────────────────────────────────────────────────
+            n_years = len(active_years)
+            st.markdown(
+                f"#### Filtered Activities"
+                + (f" *(showing {n_years} year{'s' if n_years > 1 else ''} × {n_acts} activities = {len(fdf)} rows)*"
+                   if n_years > 1 else f" *({n_acts} activities)*")
+            )
+            st.dataframe(fdf, use_container_width=True, height=400)
+            show_download_button(fdf, "activities_overview.csv")
+
+    # ── Tab 2: Budget & Performance ───────────────────────────────────────────
+    with tab2:
+        st.subheader(f"Budget & Performance — {year_label}")
+        if fdf.empty:
+            st.warning("No data for current filters.")
+        else:
             for group_col, label in [("entity_name", "Implementing Entity"),
                                       ("results_area", "Results Area")]:
                 st.markdown(f"#### By {label}")
