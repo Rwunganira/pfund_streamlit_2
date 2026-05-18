@@ -135,11 +135,12 @@ def render_activities_dashboard() -> None:
                 .drop_duplicates(subset="activity_code")
                 .copy()
             )
-            # Exclude activities with no implementing entity (matches Flask behaviour)
-            fund_src = fund_src[
-                fund_src["entity_name"].notna() &
-                (fund_src["entity_name"].astype(str).str.strip() != "")
-            ]
+            # Label missing entities as "Unassigned" so admin-fee activities
+            # with no entity are still counted rather than silently dropped
+            fund_src["entity_name"] = fund_src["entity_name"].fillna("Unassigned")
+            fund_src.loc[
+                fund_src["entity_name"].astype(str).str.strip() == "", "entity_name"
+            ] = "Unassigned"
             if sel_entity:
                 fund_src = fund_src[fund_src["entity_name"].isin(sel_entity)]
             # Use budget_total (activity total across all years) — requires ETL re-run
@@ -151,7 +152,6 @@ def render_activities_dashboard() -> None:
                 st.warning(
                     "⚠️ Grant Funding Summary is showing Year 1 budget only. "
                     "Run `python -m etl.run_etl` to get correct totals.",
-                    icon="⚠️",
                 )
             is_admin = (
                 fund_src["proposed_activity"] == ADMIN_ACTIVITY
@@ -159,7 +159,7 @@ def render_activities_dashboard() -> None:
                 else pd.Series(False, index=fund_src.index)
             )
             fund_grp = (
-                fund_src.groupby("entity_name", dropna=True)
+                fund_src.groupby("entity_name", dropna=False)
                 .apply(lambda g: pd.Series({
                     "Total Activity Cost (US$)": g.loc[~is_admin.loc[g.index], budget_col].sum(),
                     "Administrative Fees (US$)": g.loc[is_admin.loc[g.index],  budget_col].sum(),
