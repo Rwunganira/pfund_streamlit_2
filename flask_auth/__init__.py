@@ -18,7 +18,7 @@ Required env vars (same .env as Streamlit):
 from flask import Blueprint
 
 auth_bp = Blueprint(
-    "auth",
+    "pfund_auth",
     __name__,
     template_folder="templates",
     url_prefix="/auth",

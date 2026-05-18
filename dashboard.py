@@ -19,7 +19,19 @@ try:
 except ImportError:
     pass
 
+import os
 import streamlit as st
+
+# Inject Streamlit secrets into os.environ for keys not already set by .env
+# This makes st.secrets work as a fallback for local dev (secrets.toml)
+# and as the primary source on Streamlit Cloud.
+for _key in ("DATABASE_URL", "WAREHOUSE_URL"):
+    if not os.getenv(_key):
+        try:
+            if _key in st.secrets:
+                os.environ[_key] = st.secrets[_key]
+        except Exception:
+            pass
 
 st.set_page_config(
     page_title="Pandemic Fund M&E",

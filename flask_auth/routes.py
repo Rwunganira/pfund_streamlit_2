@@ -78,7 +78,7 @@ def login():
         else:
             session["username"] = username
             db_update_last_login(username)
-            return redirect(url_for("auth.dashboard"))
+            return redirect(url_for("pfund_auth.dashboard"))
 
     return render_template("auth/login.html", error=error)
 
@@ -120,7 +120,7 @@ def register():
 # ── Email verification ────────────────────────────────────────────────────────
 
 def _send_verify_link(user: dict, token: str) -> None:
-    link = url_for("auth.verify_email", u=user["username"], token=token,
+    link = url_for("pfund_auth.verify_email", u=user["username"], token=token,
                    _external=True)
     send_otp_email(user["email"], user["name"], link, purpose="verify_link")
 
@@ -133,9 +133,9 @@ def verify_email():
     if db_verify_token(username, token):
         db_mark_email_verified(username)
         return render_template("auth/verify_email.html",
-                               success=True, login_url=url_for("auth.login"))
+                               success=True, login_url=url_for("pfund_auth.login"))
     return render_template("auth/verify_email.html",
-                           expired=True, login_url=url_for("auth.login"))
+                           expired=True, login_url=url_for("pfund_auth.login"))
 
 
 # ── Forgot password ───────────────────────────────────────────────────────────
@@ -149,7 +149,7 @@ def forgot_password():
         if user:
             token = _gen_token()
             db_set_token(user["username"], token, _expiry(hours=1))
-            link  = url_for("auth.reset_password",
+            link  = url_for("pfund_auth.reset_password",
                             u=user["username"], token=token, _external=True)
             send_otp_email(user["email"], user["name"], link, purpose="reset_link")
         sent = True   # always show success to prevent email enumeration
@@ -167,7 +167,7 @@ def reset_password():
 
     if not db_verify_token(username, token):
         return render_template("auth/reset_password.html",
-                               expired=True, login_url=url_for("auth.login"))
+                               expired=True, login_url=url_for("pfund_auth.login"))
 
     if request.method == "POST":
         new_pw     = request.form.get("password", "")
@@ -181,7 +181,7 @@ def reset_password():
             db_update_password(username, new_pw)
             db_mark_email_verified(username)   # clears token
             return render_template("auth/reset_password.html",
-                                   success=True, login_url=url_for("auth.login"))
+                                   success=True, login_url=url_for("pfund_auth.login"))
 
     return render_template("auth/reset_password.html",
                            username=username, token=token, error=error)
@@ -192,7 +192,7 @@ def reset_password():
 @auth_bp.route("/logout")
 def logout():
     session.clear()
-    return redirect(url_for("auth.login"))
+    return redirect(url_for("pfund_auth.login"))
 
 
 # ── Dashboard redirect ────────────────────────────────────────────────────────
@@ -202,12 +202,12 @@ def dashboard():
     """Issue a short-lived JWT and redirect to Streamlit."""
     username = session.get("username")
     if not username:
-        return redirect(url_for("auth.login"))
+        return redirect(url_for("pfund_auth.login"))
 
     user  = db_get_user(username)
     if not user:
         session.clear()
-        return redirect(url_for("auth.login"))
+        return redirect(url_for("pfund_auth.login"))
 
     jwt_token = create_dashboard_token(
         username = user["username"],
