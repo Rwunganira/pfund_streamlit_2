@@ -166,6 +166,7 @@ def _build_fact_budget_execution(engine, df: pd.DataFrame) -> None:
             "code", "implementing_entity", "results_area",
             "delivery_partner", "category",
             budget_col, used_col,
+            "budget_total",
             "proposed_activity",
             "progress", "status", "start_date", "end_date",
         ]].copy()

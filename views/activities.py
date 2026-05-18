@@ -129,17 +129,19 @@ def render_activities_dashboard() -> None:
             # ── Grant Funding Summary ─────────────────────────────────────────
             st.markdown("#### Grant Funding Summary by Implementing Entity")
             ADMIN_ACTIVITY = "Project management and administration fees from IE(s)"
-            fund_src = bud_df.copy()
+            # Deduplicate to one row per activity so budget_total isn't triple-counted
+            fund_src = bud_df.drop_duplicates(subset="activity_code").copy()
             if sel_entity:
                 fund_src = fund_src[fund_src["entity_name"].isin(sel_entity)]
+            budget_col = "budget_total" if "budget_total" in fund_src.columns else "budget_allocated"
             is_admin = fund_src["proposed_activity"] == ADMIN_ACTIVITY \
                 if "proposed_activity" in fund_src.columns \
                 else pd.Series(False, index=fund_src.index)
             fund_grp = (
                 fund_src.groupby("entity_name", dropna=False)
                 .apply(lambda g: pd.Series({
-                    "Total Activity Cost (US$)": g.loc[~is_admin.loc[g.index], "budget_allocated"].sum(),
-                    "Administrative Fees (US$)": g.loc[is_admin.loc[g.index],  "budget_allocated"].sum(),
+                    "Total Activity Cost (US$)": g.loc[~is_admin.loc[g.index], budget_col].sum(),
+                    "Administrative Fees (US$)": g.loc[is_admin.loc[g.index],  budget_col].sum(),
                 }), include_groups=False)
                 .reset_index()
                 .rename(columns={"entity_name": "Implementing Entity"})
