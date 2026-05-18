@@ -129,16 +129,37 @@ def render_activities_dashboard() -> None:
             # ── Grant Funding Summary ─────────────────────────────────────────
             st.markdown("#### Grant Funding Summary by Implementing Entity")
             ADMIN_ACTIVITY = "Project management and administration fees from IE(s)"
-            # Deduplicate to one row per activity so budget_total isn't triple-counted
-            fund_src = bud_df.drop_duplicates(subset="activity_code").copy()
+            # One row per activity; budget_total is activity-level, not year-level
+            fund_src = (
+                bud_df
+                .drop_duplicates(subset="activity_code")
+                .copy()
+            )
+            # Exclude activities with no implementing entity (matches Flask behaviour)
+            fund_src = fund_src[
+                fund_src["entity_name"].notna() &
+                (fund_src["entity_name"].astype(str).str.strip() != "")
+            ]
             if sel_entity:
                 fund_src = fund_src[fund_src["entity_name"].isin(sel_entity)]
-            budget_col = "budget_total" if "budget_total" in fund_src.columns else "budget_allocated"
-            is_admin = fund_src["proposed_activity"] == ADMIN_ACTIVITY \
-                if "proposed_activity" in fund_src.columns \
+            # Use budget_total (activity total across all years) — requires ETL re-run
+            # Falls back to budget_allocated (Year 1 only) if budget_total not yet in mart
+            if "budget_total" in fund_src.columns:
+                budget_col = "budget_total"
+            else:
+                budget_col = "budget_allocated"
+                st.warning(
+                    "⚠️ Grant Funding Summary is showing Year 1 budget only. "
+                    "Run `python -m etl.run_etl` to get correct totals.",
+                    icon="⚠️",
+                )
+            is_admin = (
+                fund_src["proposed_activity"] == ADMIN_ACTIVITY
+                if "proposed_activity" in fund_src.columns
                 else pd.Series(False, index=fund_src.index)
+            )
             fund_grp = (
-                fund_src.groupby("entity_name", dropna=False)
+                fund_src.groupby("entity_name", dropna=True)
                 .apply(lambda g: pd.Series({
                     "Total Activity Cost (US$)": g.loc[~is_admin.loc[g.index], budget_col].sum(),
                     "Administrative Fees (US$)": g.loc[is_admin.loc[g.index],  budget_col].sum(),
